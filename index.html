@@ -288,6 +288,26 @@ section{padding:96px 0;}
 .btn-cart{background:transparent;border:1.5px solid rgba(232,80,10,.3);color:var(--accent);border-radius:3px;padding:.5rem 1rem;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;width:100%;transition:all .3s;margin-top:.5rem;cursor:pointer;position:relative;overflow:hidden;}
 .btn-cart:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 
+/* BUNDLE DEALS */
+#bundles{background:var(--steel2);border-top:1px solid rgba(255,255,255,.05);}
+.bundle-card{background:var(--steel3);border-radius:8px;border:1px solid rgba(255,255,255,.07);padding:1.5rem;height:100%;display:flex;flex-direction:column;transition:all .4s;position:relative;overflow:hidden;}
+.bundle-card:hover{border-color:rgba(232,80,10,.3);box-shadow:0 20px 50px rgba(0,0,0,.4);transform:translateY(-6px);}
+.bundle-tag{position:absolute;top:0;right:0;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:.3rem .9rem;border-radius:0 0 0 8px;}
+.bundle-name{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:.5px;margin-bottom:.3rem;}
+.bundle-desc{font-size:.78rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:1rem;}
+.bundle-products{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1rem;flex:1;}
+.bundle-product{display:flex;align-items:center;gap:.7rem;background:rgba(255,255,255,.04);border-radius:5px;padding:.45rem .65rem;}
+.bundle-product img{width:38px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;}
+.bundle-product-info{flex:1;min-width:0;}
+.bundle-product-name{font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:600;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bundle-product-price{font-size:.7rem;color:rgba(255,255,255,.35);}
+.bundle-pricing{border-top:1px solid rgba(255,255,255,.07);padding-top:.8rem;margin-bottom:.7rem;}
+.bundle-original{font-size:.8rem;color:rgba(255,255,255,.3);text-decoration:line-through;}
+.bundle-final{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--accent);line-height:1;}
+.bundle-savings{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-top:.2rem;}
+.btn-bundle{background:var(--accent);color:#fff;border:none;border-radius:3px;padding:.55rem 1rem;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;width:100%;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.btn-bundle:hover{background:var(--accent2);box-shadow:0 6px 20px rgba(232,80,10,.35);}
+
 /* PRODUCT MODAL */
 .prod-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9995;opacity:0;pointer-events:none;transition:opacity .3s;}
 .prod-modal-overlay.open{opacity:1;pointer-events:all;}
@@ -1322,6 +1342,14 @@ body.dark .review-textarea{background:rgba(255,255,255,.05);border-color:rgba(25
   </div>
 </section>
 
+<!-- BUNDLE DEALS -->
+<section id="bundles">
+  <div class="container" style="padding-top:4rem;padding-bottom:4rem;">
+    <div class="text-center mb-5 rev"><span class="s-tag">Special Offers</span><h2 class="s-h lt">Bundle Deals — <em>Buy Together & Save</em></h2><div class="divbar cx"></div><p style="color:rgba(255,255,255,.35);font-size:.85rem;margin-top:.8rem;max-width:520px;margin-left:auto;margin-right:auto;">Combine complementary products and save. Each bundle is curated for the best results.</p></div>
+    <div class="row g-4 stg" id="bundleGrid"></div>
+  </div>
+</section>
+
 <!-- VIDEO GALLERY -->
 <section class="video-section" id="videos">
   <div class="container">
@@ -1409,6 +1437,14 @@ const COUPONS = {
   'SAVE5': {discount:5,type:'fixed',label:'$5 off'},
   'FIRSTORDER': {discount:15,type:'percent',label:'15% off first order'}
 };
+
+/* ═══ BUNDLE DEALS ═══ */
+const BUNDLES = [
+  {id:'face-routine',name:'Face Care Routine',desc:'Complete daily face care — cleanse, protect, and revitalize.',productIds:[0,2,6],discount:15,tag:'Save 15%'},
+  {id:'beard-kit',name:'Ultimate Beard Kit',desc:'Everything you need for a well-groomed beard.',productIds:[1,4,7],discount:12,tag:'Save 12%'},
+  {id:'anti-aging-set',name:'Anti-Aging Research Set',desc:'Clinically-proven research formulas for younger-looking skin.',productIds:[8,9,11],discount:18,tag:'Save 18%'},
+  {id:'daily-essentials',name:'Daily Essentials Pack',desc:'Face wash, body wash, and serum — your daily trio.',productIds:[0,5,3],discount:10,tag:'Save 10%'}
+];
 
 /* ═══ STATE ═══ */
 let currentPMProduct = null;
@@ -1705,6 +1741,39 @@ function openCompareModal(){
 }
 function closeCompareModal(){document.getElementById('compareModalOverlay').classList.remove('open');}
 document.getElementById('compareModalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCompareModal();});
+
+/* ═══ BUNDLE DEALS ═══ */
+function renderBundles(){
+  const grid=document.getElementById('bundleGrid');
+  if(!grid)return;
+  grid.innerHTML=BUNDLES.map(b=>{
+    const bProducts=b.productIds.map(id=>products.find(p=>p.id===id)).filter(Boolean);
+    const originalTotal=bProducts.reduce((s,p)=>s+p.price,0);
+    const bundlePrice=Math.round(originalTotal*(1-b.discount/100)*100)/100;
+    const savings=(originalTotal-bundlePrice).toFixed(2);
+    return `<div class="col-sm-6 col-lg-3"><div class="bundle-card">
+      <span class="bundle-tag">${b.tag}</span>
+      <div class="bundle-name">${b.name}</div>
+      <div class="bundle-desc">${b.desc}</div>
+      <div class="bundle-products">${bProducts.map(p=>`<div class="bundle-product"><img src="${p.thumbImg}" alt="${p.name}"/><div class="bundle-product-info"><div class="bundle-product-name">${p.name}</div><div class="bundle-product-price">$${p.price}</div></div></div>`).join('')}</div>
+      <div class="bundle-pricing"><div class="bundle-original">$${originalTotal.toFixed(2)}</div><div class="bundle-final">$${bundlePrice.toFixed(2)}</div><div class="bundle-savings"><i class="bi bi-tag-fill me-1"></i>You save $${savings}</div></div>
+      <button class="btn-bundle ripple-wrap" onclick="addBundleToCart('${b.id}')"><i class="bi bi-cart-plus me-1"></i>Add Bundle to Cart</button>
+    </div></div>`;
+  }).join('');
+}
+function addBundleToCart(bundleId){
+  const bundle=BUNDLES.find(b=>b.id===bundleId);
+  if(!bundle)return;
+  const bProducts=bundle.productIds.map(id=>products.find(p=>p.id===id)).filter(Boolean);
+  const originalTotal=bProducts.reduce((s,p)=>s+p.price,0);
+  const bundlePrice=Math.round(originalTotal*(1-bundle.discount/100)*100)/100;
+  const perItemRatio=bundlePrice/originalTotal;
+  bProducts.forEach(p=>{
+    const discountedPrice=Math.round(p.price*perItemRatio*100)/100;
+    addToCart(p.name,discountedPrice,p.thumbImg);
+  });
+  showToast(bundle.name+' added to cart! 🎉');
+}
 
 /* ═══ COUPON ═══ */
 function renderCouponHints(){
@@ -2277,8 +2346,10 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('DOMContentLoaded',()=>{
   loadFromStorage();
   renderVideos();
+  renderBundles();
   initVmRows();
   renderCouponHints();
+  renderBundles();
   updateCartUI();
   updateWishlistUI();
   syncWishBtns();
