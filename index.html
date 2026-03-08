@@ -1073,6 +1073,7 @@ footer a.flink:hover{color:var(--accent);padding-left:.4rem;}
       <div class="col-sm-6 col-lg-3" data-cat="face"><div class="pc"><div class="pi" onclick="openPM(6)"><img src="https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?w=600&q=82" alt="Eye Cream" loading="lazy"/><div class="pi-ov"></div><span class="ptag new_">New</span><button class="wish-btn" onclick="event.stopPropagation();toggleWish(this,'Dark Circle Eye Cream',58,'https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?w=100&q=80')"><i class="bi bi-heart"></i></button><button class="qv" onclick="event.stopPropagation();openPM(6)"><i class="bi bi-eye me-1"></i>Quick View</button></div><div class="pb"><div class="stars">★★★★★ <span style="color:rgba(255,255,255,.28);font-size:.65rem">(189)</span></div><div class="pname" style="cursor:pointer" onclick="openPM(6)">Dark Circle Eye Cream</div><div class="psub">15ml · Revitalizing</div><div class="pdesc">Retinol 0.5%, Peptide Complex, and Vitamin K visibly reduce under-eye bags in 2 weeks.</div><div class="ptags"><span class="ptag-item">Anti-Dark Circle</span><span class="ptag-item">Retinol</span></div><div class="stock-wrap"><div class="stock-label"><span>Stock</span><span style="color:#f4c542">52%</span></div><div class="stock-bar"><div class="stock-fill" style="width:52%;background:#f4c542"></div></div></div><div><span class="pprice">$58</span></div><button class="btn-cart ripple-wrap" onclick="addCartFromBtn(this,'Dark Circle Eye Cream',58,'https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?w=100&q=80')"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button></div></div></div>
       <div class="col-sm-6 col-lg-3" data-cat="beard"><div class="pc"><div class="pi" onclick="openPM(7)"><img src="https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600&q=82" alt="Beard Balm" loading="lazy"/><div class="pi-ov"></div><span class="ptag hot">Bestseller</span><button class="wish-btn" onclick="event.stopPropagation();toggleWish(this,'Beard Styling Balm',36,'https://images.unsplash.com/photo-1520975954732-35dd22299614?w=100&q=80')"><i class="bi bi-heart"></i></button><button class="qv" onclick="event.stopPropagation();openPM(7)"><i class="bi bi-eye me-1"></i>Quick View</button></div><div class="pb"><div class="stars">★★★★★ <span style="color:rgba(255,255,255,.28);font-size:.65rem">(241)</span></div><div class="pname" style="cursor:pointer" onclick="openPM(7)">Beard Styling Balm</div><div class="psub">60g · Medium Hold</div><div class="pdesc">Medium-hold balm keeping your beard styled all day. Beeswax and Shea Butter condition as you style.</div><div class="ptags"><span class="ptag-item">Medium Hold</span><span class="ptag-item">No Flake</span></div><div class="stock-wrap"><div class="stock-label"><span>Stock</span><span style="color:var(--accent)">90%</span></div><div class="stock-bar"><div class="stock-fill" style="width:90%;background:var(--accent)"></div></div></div><div><span class="pprice">$36</span><span class="pold">$44</span></div><button class="btn-cart ripple-wrap" onclick="addCartFromBtn(this,'Beard Styling Balm',36,'https://images.unsplash.com/photo-1520975954732-35dd22299614?w=100&q=80')"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button></div></div></div>
     </div>
+    <div class="text-center mt-5 rev"><button class="btn-forge ripple-wrap" onclick="openAllProducts()"><i class="bi bi-grid me-2"></i>Browse All Products</button></div>
   </div>
 </section>
 
@@ -1780,13 +1781,47 @@ function selectPlan(name,price){
   pendingPayTotal=price;pendingPayDiscount=0;openPay();
 }
 
+/* ═══ ALL PRODUCTS DRAWER ═══ */
+let apdFilter='all';let apdSort='default';
+function openAllProducts(){
+  apdFilter='all';apdSort='default';
+  document.querySelectorAll('.apd-filter').forEach(b=>b.classList.toggle('active',b.dataset.apf==='all'));
+  document.querySelector('.apd-sort').value='default';
+  renderAPD();
+  document.getElementById('allProductsDrawer').classList.add('open');document.body.style.overflow='hidden';
+}
+function closeAllProducts(){
+  document.getElementById('allProductsDrawer').classList.remove('open');document.body.style.overflow='';
+}
+function filterAPD(el,filter){
+  apdFilter=filter;
+  document.querySelectorAll('.apd-filter').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderAPD();
+}
+function sortAPD(value){
+  apdSort=value;renderAPD();
+}
+function renderAPD(){
+  let list=apdFilter==='all'?[...products]:products.filter(p=>p.cat===apdFilter);
+  if(apdSort==='price-asc')list.sort((a,b)=>a.price-b.price);
+  else if(apdSort==='price-desc')list.sort((a,b)=>b.price-a.price);
+  else if(apdSort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('apdCount').textContent='Showing '+list.length+' product'+(list.length!==1?'s':'');
+  document.getElementById('apdGrid').innerHTML=list.map(p=>`<div class="col-sm-6 col-md-4 col-lg-3"><div class="pc"><div class="pi" onclick="closeAllProducts();setTimeout(()=>openPM(${p.id}),350)"><img src="${p.img}" alt="${p.name}" loading="lazy"/><div class="pi-ov"></div>${p.oldPrice?'<span class="ptag sale">Sale</span>':''}<button class="qv" onclick="event.stopPropagation();closeAllProducts();setTimeout(()=>openPM(${p.id}),350)"><i class="bi bi-eye me-1"></i>Quick View</button></div><div class="pb"><div class="stars">${p.stars} <span style="color:rgba(255,255,255,.28);font-size:.65rem">${p.rating.match(/\(.*\)/)?.[0]||''}</span></div><div class="pname" style="cursor:pointer" onclick="closeAllProducts();setTimeout(()=>openPM(${p.id}),350)">${p.name}</div><div class="psub">${p.sub}</div><div><span class="pprice">$${p.price}</span>${p.oldPrice?'<span class="pold">$'+p.oldPrice+'</span>':''}</div><button class="btn-cart ripple-wrap" onclick="addCartFromBtn(this,\'${p.name}\',${p.price},\'${p.thumbImg}\')"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button></div></div></div>`).join('');
+}
+
 /* ═══ LIGHTBOX ═══ */
+let lbImages=[];let lbIdx=0;
 function openLB(src,cap=''){
+  lbImages=products.map(p=>({src:p.img,cap:p.name}));
+  lbIdx=lbImages.findIndex(i=>i.src===src);if(lbIdx<0)lbIdx=0;
   document.getElementById('lb-img').src=src;document.getElementById('lb-caption').textContent=cap;
   document.getElementById('lb').classList.add('open');document.body.style.overflow='hidden';
 }
 function closeLB(){document.getElementById('lb').classList.remove('open');document.body.style.overflow='';}
-function lbPrev(){}function lbNext(){}
+function lbPrev(){if(lbImages.length<2)return;lbIdx=(lbIdx-1+lbImages.length)%lbImages.length;document.getElementById('lb-img').src=lbImages[lbIdx].src;document.getElementById('lb-caption').textContent=lbImages[lbIdx].cap;}
+function lbNext(){if(lbImages.length<2)return;lbIdx=(lbIdx+1)%lbImages.length;document.getElementById('lb-img').src=lbImages[lbIdx].src;document.getElementById('lb-caption').textContent=lbImages[lbIdx].cap;}
 document.getElementById('lb').addEventListener('click',e=>{if(e.target===e.currentTarget)closeLB();});
 
 /* ═══ CONTACT ═══ */
@@ -1822,12 +1857,14 @@ function toggleDark(){document.body.classList.toggle('dark');showToast(document.
 /* ═══ KEYBOARD ═══ */
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
-    closeLB();closeSearch();closePM();closeVideoModal();closeCompareModal();
+    closeLB();closeSearch();closePM();closeVideoModal();closeCompareModal();closeAllProducts();
     if(document.getElementById('cartDrawer').classList.contains('open'))toggleCart();
     if(document.getElementById('wishPanel').classList.contains('open'))toggleWishPanel();
     if(document.getElementById('pointsPanel').classList.contains('open'))togglePointsPanel();
     if(document.getElementById('payModal').classList.contains('open'))closePay();
   }
+  if(e.key==='ArrowLeft'&&document.getElementById('lb').classList.contains('open'))lbPrev();
+  if(e.key==='ArrowRight'&&document.getElementById('lb').classList.contains('open'))lbNext();
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openSearch();}
 });
 
