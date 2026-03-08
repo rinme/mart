@@ -1303,13 +1303,13 @@ function saveToStorage(){
 }
 function loadFromStorage(){
   try{
-    const cart=localStorage.getItem('forge_cart');if(cart)cartItems=JSON.parse(cart);
-    const wish=localStorage.getItem('forge_wishlist');if(wish)wishlist=JSON.parse(wish);
-    const pts=localStorage.getItem('forge_points');if(pts)loyaltyPoints=JSON.parse(pts);
-    const ptsH=localStorage.getItem('forge_pointsHistory');if(ptsH){const arr=JSON.parse(ptsH);pointsHistory.length=0;arr.forEach(x=>pointsHistory.push(x));}
-    const orders=localStorage.getItem('forge_orders');if(orders)orderHistory=JSON.parse(orders);
-    const reviews=localStorage.getItem('forge_reviews');if(reviews)productReviews=JSON.parse(reviews);
-    const rv=localStorage.getItem('forge_recentlyViewed');if(rv)recentlyViewed=JSON.parse(rv);
+    const cart=localStorage.getItem('forge_cart');if(cart){const parsed=JSON.parse(cart);if(Array.isArray(parsed))cartItems=parsed;}
+    const wish=localStorage.getItem('forge_wishlist');if(wish){const parsed=JSON.parse(wish);if(Array.isArray(parsed))wishlist=parsed;}
+    const pts=localStorage.getItem('forge_points');if(pts){const parsed=JSON.parse(pts);if(typeof parsed==='number')loyaltyPoints=parsed;}
+    const ptsH=localStorage.getItem('forge_pointsHistory');if(ptsH){const arr=JSON.parse(ptsH);if(Array.isArray(arr)){pointsHistory.length=0;arr.forEach(x=>pointsHistory.push(x));}}
+    const orders=localStorage.getItem('forge_orders');if(orders){const parsed=JSON.parse(orders);if(Array.isArray(parsed))orderHistory=parsed;}
+    const reviews=localStorage.getItem('forge_reviews');if(reviews){const parsed=JSON.parse(reviews);if(parsed&&typeof parsed==='object')productReviews=parsed;}
+    const rv=localStorage.getItem('forge_recentlyViewed');if(rv){const parsed=JSON.parse(rv);if(Array.isArray(parsed))recentlyViewed=parsed;}
   }catch(e){}
 }
 
@@ -2063,9 +2063,10 @@ function setReviewStar(n){
 function submitReview(){
   if(!currentPMProduct)return;
   const rating=parseInt(document.querySelector('.review-stars-input')?.dataset.rating||'0');
-  const text=document.getElementById('reviewText')?.value?.trim();
+  let text=document.getElementById('reviewText')?.value?.trim();
   if(!rating){showToast('Please select a star rating');return;}
   if(!text){showToast('Please write a review');return;}
+  text=text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
   if(!productReviews[currentPMProduct.id])productReviews[currentPMProduct.id]=[];
   productReviews[currentPMProduct.id].push({rating,text,date:new Date().toLocaleDateString(),user:'You'});
   document.getElementById('reviewText').value='';
@@ -2081,12 +2082,16 @@ function renderUserReviews(productId){
   if(!container)return;
   const reviews=productReviews[productId]||[];
   if(reviews.length===0){container.innerHTML='';return;}
-  container.innerHTML=reviews.map(r=>`
+  container.innerHTML=reviews.map(r=>{
+    const safeRating=Math.max(0,Math.min(5,parseInt(r.rating)||0));
+    const safeText=(r.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const safeMeta=((r.user||'')+ ' · '+(r.date||'')).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `
     <div class="user-review">
-      <div class="ur-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-      <div class="ur-text">${r.text}</div>
-      <div class="ur-meta">${r.user} · ${r.date}</div>
-    </div>`).join('');
+      <div class="ur-stars">${'★'.repeat(safeRating)}${'☆'.repeat(5-safeRating)}</div>
+      <div class="ur-text">${safeText}</div>
+      <div class="ur-meta">${safeMeta}</div>
+    </div>`;}).join('');
 }
 
 /* ═══ TOAST ═══ */
